@@ -178,8 +178,12 @@ export default function Home() {
 
 
  
-<section className="snap-start w-screen min-h-screen bg-[#FFFFFA] text-[#0f172a] flex items-center justify-center flex-shrink-0 px-4 sm:px-6 py-12 overflow-x-hidden">
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-6xl mx-auto">
+<section className="snap-start w-screen min-h-screen bg-[#FFFFFA] text-[#0f172a] flex items-center justify-center flex-shrink-0 px-4 sm:px-6 py-12">
+  <div
+    className="w-full max-w-[90rem] px-4 sm:px-0
+               grid grid-cols-1 sm:grid-cols-2 gap-6
+               max-h-[80vh] sm:max-h-full overflow-y-auto"
+  >
     {[
       {
         text: "Dal 1983, Datamec è un punto di riferimento preciso e affidabile nella comunicazione diretta per il Non Profit, partner consolidato delle principali Onlus italiane e sempre pronta a innovare.",
@@ -223,6 +227,7 @@ export default function Home() {
     ))}
   </div>
 </section>
+
 
 
 
