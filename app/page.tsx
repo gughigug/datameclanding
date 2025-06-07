@@ -1,103 +1,342 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import gsap from "gsap";
+import Draggable from "gsap/Draggable";
+import { FaArrowRightLong } from "react-icons/fa6";
+import type { Draggable as DraggableInstance } from "gsap/Draggable";
+
+gsap.registerPlugin(Draggable);
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const scrollContainer = useRef<HTMLDivElement>(null);
+  const coinRef = useRef(null);
+  const thirdSectionRef = useRef<HTMLDivElement>(null);
+  const draggableInstance = useRef<DraggableInstance | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  // Scroll verticale → orizzontale (desktop)
+  useEffect(() => {
+    const el = scrollContainer.current;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (window.innerWidth > 768) {
+        e.preventDefault();
+        if (el) {
+          el.scrollLeft += e.deltaY;
+        }
+      }
+    };
+
+    if (el) {
+      el.addEventListener("wheel", handleWheel, { passive: false });
+    }
+
+    return () => {
+      if (el) {
+        el.removeEventListener("wheel", handleWheel);
+      }
+    };
+  }, []);
+
+  // Draggable nella terza sezione
+  useEffect(() => {
+    const section = thirdSectionRef.current;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && coinRef.current) {
+          // Se siamo nella sezione 3, crea Draggable
+          draggableInstance.current = Draggable.create(coinRef.current, {
+            bounds: section,
+            inertia: true,
+          })[0];
+        } else {
+          // Fuori dalla sezione 3, distruggi Draggable
+          if (draggableInstance.current) {
+            draggableInstance.current.kill();
+            draggableInstance.current = null;
+          }
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (section) {
+      observer.observe(section);
+    }
+
+    return () => {
+      if (section) {
+        observer.unobserve(section);
+      }
+      if (draggableInstance.current) {
+        draggableInstance.current.kill();
+        draggableInstance.current = null;
+      }
+    };
+  }, []);
+
+  return (
+   <div
+  ref={scrollContainer}
+  className="flex overflow-x-auto overflow-y-hidden h-screen w-screen snap-x snap-mandatory scroll-smooth"
+  style={{ scrollBehavior: "smooth" }}
+>
+ {/* Sezione 1 */}
+<section className="snap-start w-screen h-screen flex-shrink-0 bg-[#A5D8FF] text-[#0f172a] relative overflow-hidden flex flex-col items-center justify-center px-8">
+  {/* Logo fluttuante */}
+  <motion.img
+    src="/datameclogo.jpeg"
+    alt="Datamec Logo"
+    initial={{ opacity: 0, y: -20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 1 }}
+    className="absolute top-6 left-6 w-24 sm:w-32 md:w-40 hover:opacity-90 transition-opacity duration-300 z-20"
+  />
+
+  {/* Sfondo liquido decorativo */}
+  <motion.div
+    className="absolute -bottom-40 -right-40 w-[400px] h-[400px] bg-[#76E5FC] rounded-full blur-3xl opacity-60"
+    initial={{ scale: 0 }}
+    animate={{ scale: 1 }}
+    transition={{ delay: 0.5, duration: 1.2 }}
+  />
+
+  {/* Contenuto centrale */}
+  <div className="flex flex-col items-center justify-center w-full max-w-5xl z-10 text-center relative pb-20">
+    <motion.h1
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.8 }}
+      className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-[#0f172a]"
+    >
+      Precisione che comunica,<br /> innovazione che connette.
+    </motion.h1>
+
+    {/* Onde morbide blu scuro sotto il testo */}
+
+{/* Linea sottile a onde pixellose tipo videogame */}
+<svg
+  className="mt-4 w-40 h-6"
+  viewBox="0 0 160 24"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    d="
+      M0 12 
+      L10 6 
+      L20 12 
+      L30 6 
+      L40 12 
+      L50 6 
+      L60 12 
+      L70 6 
+      L80 12 
+      L90 6 
+      L100 12 
+      L110 6 
+      L120 12 
+      L130 6 
+      L140 12 
+      L150 6 
+      L160 12"
+    stroke="#0b3d91"
+    strokeWidth="2"
+    fill="none"
+    strokeLinecap="square"
+  />
+</svg>
+
+
+
+
+    <motion.div
+      animate={{ x: [0, 10, 0] }}
+      transition={{ repeat: Infinity, duration: 1.5 }}
+      className="mt-10 text-5xl sm:text-6xl text-[#FF8552] hover:text-[#FFFFFA] transition-colors duration-300 cursor-pointer"
+    >
+      <FaArrowRightLong />
+    </motion.div>
+  </div>
+
+  {/* Onde marine come separatore */}
+  <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none" style={{height: "80px"}}>
+    <svg
+      className="relative block w-full h-full"
+      xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="none"
+      viewBox="0 0 1440 80"
+    >
+      <path
+        fill="#76E5FC"
+        d="M0,30 C360,90 720,0 1080,40 1260,65 1440,15 1440,15 L1440,80 L0,80 Z"
+      ></path>
+    </svg>
+  </div>
+</section>
+
+
+ 
+<section className="snap-start w-screen min-h-screen bg-[#FFFFFA] text-[#0f172a] flex items-center justify-center flex-shrink-0 px-4 sm:px-6 py-12">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-[90rem]">
+    {[
+      {
+        text: "Dal 1983, Datamec è un punto di riferimento preciso e affidabile nella comunicazione diretta per il Non Profit, partner consolidato delle principali Onlus italiane e sempre pronta a innovare.",
+        imgSrc: "/palma.png",
+        alt: "Palma",
+      },
+      {
+        text: "La nostra missione è chiara: rafforzare la voce dei nostri clienti senza perdere la nostra identità. Ci evolviamo, ci completiamo, ci integriamo. Restiamo autentici. E rendiamo ogni progetto più forte, più mirato, più efficace.",
+        imgSrc: "/fiore.png",
+        alt: "Fiore",
+      },
+      {
+        text: "Strategia. Produzione. Monitoraggio.\nDati variabili. Sicurezza. CRM integrati.\nCreatività che coinvolge. Cura sartoriale.\n20 anni di esperienza vissuta, non raccontata.\nQuesto è il nostro modo di fare fundraising.",
+        imgSrc: "/tucano.png",
+        alt: "Tucano",
+      },
+      {
+        text: "Branding & adv.\nSiti web & app.\nSocial media & content.\nShooting, render 3D, video.\nDalla creatività alla tecnica, ogni dettaglio ha una visione. Il nostro lavoro è unire ogni elemento in un’unica grande esperienza: quella del tuo brand.",
+        imgSrc: "/ananas.png",
+        alt: "Ananas",
+      },
+    ].map(({ text, imgSrc, alt }, i) => (
+      <motion.div
+        key={i}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: i * 0.2, type: "spring", stiffness: 80 }}
+        className="bg-[#A5D8FF] p-5 sm:p-6 rounded-2xl shadow-xl whitespace-pre-wrap text-sm sm:text-base
+                   flex flex-col items-center text-center break-words
+                   transition-transform duration-300 hover:scale-105 hover:shadow-[0_10px_30px_rgba(118,229,252,0.5)]
+                   cursor-default"
+      >
+        <img
+          src={imgSrc}
+          alt={alt}
+          className="mb-4 w-12 h-12 sm:w-16 sm:h-16 object-contain"
+          loading="lazy"
+        />
+        <p>{text}</p>
+      </motion.div>
+    ))}
+  </div>
+</section>
+
+
+
+
+  <section
+  ref={thirdSectionRef}
+  className="snap-start w-screen h-screen flex flex-col justify-center items-center bg-[#A5D8FF] text-[#0f172a] relative flex-shrink-0 px-6 text-center"
+>
+    
+
+    {/* Onde marine come separatore */}
+  <div className="absolute top-0 left-0 w-full overflow-hidden leading-none" style={{ height: "80px" }}>
+  <svg
+    className="relative block w-full h-full rotate-180"
+    xmlns="http://www.w3.org/2000/svg"
+    preserveAspectRatio="none"
+    viewBox="0 0 1440 80"
+  >
+    <path
+      fill="#76E5FC"
+      d="M0,30 C360,90 720,0 1080,40 1260,65 1440,15 1440,15 L1440,80 L0,80 Z"
+    />
+  </svg>
+</div>
+
+
+    {/* Linea sottile a onde pixellose tipo videogame */}
+<svg
+  className="mt-4 w-40 h-6"
+  viewBox="0 0 160 24"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    d="
+      M0 12 
+      L10 6 
+      L20 12 
+      L30 6 
+      L40 12 
+      L50 6 
+      L60 12 
+      L70 6 
+      L80 12 
+      L90 6 
+      L100 12 
+      L110 6 
+      L120 12 
+      L130 6 
+      L140 12 
+      L150 6 
+      L160 12"
+    stroke="#0b3d91"
+    strokeWidth="2"
+    fill="none"
+    strokeLinecap="square"
+  />
+</svg>
+
+    
+    <div className="space-y-2 sm:space-y-3 mb-12 text-base sm:text-xl">
+      <p className="font-semibold text-xl">Pensiamo</p>
+      <p>La tua idea prende forma.</p>
+      <p className="font-semibold text-xl">Facciamo</p>
+      <p>Dalla carta al pixel, tutto gira.</p>
+      <p className="font-semibold text-xl">Miglioriamo</p>
+      <p>Ogni progetto, ogni volta.</p>
     </div>
+   <div
+  className="absolute bottom-10 right-10 flex flex-col items-center z-30"
+  style={{ touchAction: "none" }}
+>
+  <motion.span
+    initial={{ opacity: 0, y: 5 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 1, delay: 0.5 }}
+    className="text-sm text-[#0f172a] bg-white/70 px-2 py-1 rounded-full shadow-md mb-2"
+  >
+    Trascinami
+  </motion.span>
+
+  <img
+    ref={coinRef}
+    id="coin"
+    src="/coin.png"
+    alt="coin"
+    className="w-20 h-20 sm:w-24 sm:h-24 cursor-grab touch-none"
+  />
+</div>
+
+  </section>
+
+{/* Sezione 4 */}
+<section
+  className="snap-start w-screen min-h-screen relative flex flex-col justify-end items-center text-white px-6 pt-12 pb-0 flex-shrink-0"
+  style={{
+    backgroundImage: "url('/nave.png')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+  }}
+>
+  {/* Footer semplice, visibile e responsive */}
+  <footer className="w-full text-center text-xs sm:text-sm md:text-base font-semibold text-white bg-black/40 backdrop-blur-sm py-6 px-4">
+    © 2025 Data Mec S.r.l. – INDI SRL – guglielmogiannattasio.exe. All Rights Reserved.
+  </footer>
+</section>
+
+
+
+
+
+
+</div>
+
   );
 }
